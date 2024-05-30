@@ -15,6 +15,12 @@ class CEOP_Handler:
         cost_constraint,
         seed,
     ):
+        """
+        Handler class for the aif360 CalibratedEqOddsPostprocessing algorithm.
+        This class is used to store and manage the datasets and predictions that are
+        used in the CEOP algorithm.
+        It also has methods for dataset metrics and performance metrics.
+        """
         self.validation_dataset = validation_dataset
         self.test_dataset = test_dataset
         self.validation_predictions = validation_predictions

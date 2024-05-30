@@ -14,6 +14,9 @@ from tqdm import tqdm
 
 
 def aif_dataset_loader(dataset_used, protected_attribute_used):
+    """
+    Load the specified dataset from aif360 and split it into training, validation, and testing sets
+    """
     dataset = None
     if dataset_used == "adult":
         dataset = AdultDataset()
@@ -44,9 +47,7 @@ def aif_dataset_loader(dataset_used, protected_attribute_used):
 
     # Spelling error handling
     if dataset is None:
-        raise ValueError(
-                "dataset must be one of 'adult', 'german', or 'compas'"
-            )
+        raise ValueError("dataset must be one of 'adult', 'german', or 'compas'")
 
     # split dataset
     dataset_train, dataset_vt = dataset.split([0.6], shuffle=True)
@@ -62,6 +63,10 @@ def aif_dataset_loader(dataset_used, protected_attribute_used):
 
 
 def classify(dataset_train, dataset_valid, dataset_test):
+    """
+    Regression classifier from aif360 demo
+    https://github.com/Trusted-AI/AIF360/blob/main/examples/demo_calibrated_eqodds_postprocessing.ipynb
+    """
     # Placeholder for predicted and transformed datasets
     dataset_train_pred = dataset_train.copy(deepcopy=True)
     dataset_valid_pred = dataset_valid.copy(deepcopy=True)
@@ -118,12 +123,18 @@ def classify(dataset_train, dataset_valid, dataset_test):
 
 
 def prediction(weights, model, input_data):
+    """
+    Get model prediction
+    """
     return model.apply(weights, input_data)
 
 
 def get_performance_metrics(
     dataset, predictions, unprivileged_groups, privileged_groups
 ):
+    """
+    Get the accuracy and fairness of the given predictions
+    """
     cm = ClassificationMetric(
         dataset,
         predictions,
@@ -135,9 +146,10 @@ def get_performance_metrics(
     return accuracy, fairness
 
 
-# Get prediction dataframe
 def get_model_prediction_dataframes(data, weights, model):
-
+    """
+    Get the prediction dataframe from the preprocessed tensorflow dataset + the model predictions
+    """
     # Load data as a pandas dataframe from tensorflow dataset
     data = np.array([sample[0].numpy() for sample in data.unbatch()])
     pred_df = pd.DataFrame(
@@ -159,7 +171,7 @@ def get_model_prediction_dataframes(data, weights, model):
 
     # Add prediction column from model predictions
     pred_df = pred_df.assign(
-        quality=[prediction(weights, model, data[i]) for i in range(len(data))]
+        quality=[prediction(weights, model, data[i]) for i in tqdm(range(len(data)))]
     )
     pred_df["quality"] = pred_df["quality"].explode()
     pred_df["quality"] = pred_df["quality"].astype("float32")
@@ -167,28 +179,30 @@ def get_model_prediction_dataframes(data, weights, model):
     return pred_df
 
 
-# Get ground truth dataframe
 def get_ground_truth_dataframes(data):
-
+    """
+    Get the ground truth dataframe from the preprocessed tensorflow dataset
+    """
     # Load dataset as a pandas dataframe
     df = tfds.as_dataframe(data.unbatch(), tfds.builder("wine_quality/white").info)
 
     # Reshape dataframe from features and labels
-    df[
-        [
-            "fixed acidity",
-            "volatile acidity",
-            "citric acid",
-            "residual sugar",
-            "chlorides",
-            "free sulfur dioxide",
-            "total sulfur dioxide",
-            "density",
-            "pH",
-            "sulphates",
-            "alcohol",
-        ]
-    ] = pd.DataFrame(df["features"].tolist(), index=df.index)
+    cols = [
+        "fixed acidity",
+        "volatile acidity",
+        "citric acid",
+        "residual sugar",
+        "chlorides",
+        "free sulfur dioxide",
+        "total sulfur dioxide",
+        "density",
+        "pH",
+        "sulphates",
+        "alcohol",
+    ]
+
+    new_df = pd.DataFrame(df["features"].tolist(), index=df.index, columns=cols)
+    df[cols] = new_df
     df.drop(columns=["features"], inplace=True)
     df["quality"] = df["quality"].astype("float32")
 
@@ -196,7 +210,9 @@ def get_ground_truth_dataframes(data):
 
 
 def create_aif360_dataset(df):
-
+    """
+    Create a binary label dataset from a pandas dataframe
+    """
     # Create a binary label
     label_avg = np.average(df["quality"])
     df["quality"].where(df["quality"] >= label_avg, 0, inplace=True)
@@ -236,7 +252,11 @@ def set_labels_from_scores(
     unprivileged_groups,
     privileged_groups,
 ):
+    """
+    Compute the labels based on the threshold value and probability score of the datapoint and add to metrics list
+    """
     predictions = old_predictions.copy(deepcopy=True)
+
     # Blabla
     y_temp = np.zeros_like(predictions.labels)
     y_temp[predictions.scores >= thresh] = predictions.favorable_label
@@ -268,6 +288,9 @@ def compute_ceop_output(
     unprivileged_groups,
     privileged_groups,
 ):
+    """
+    Compute the calibrated equalized odds models prediction according to the given thresholds
+    """
     bef_avg_odds_diff_valid = []
     bef_avg_odds_diff_test = []
     aft_avg_odds_diff_valid = []
@@ -327,6 +350,9 @@ def compute_ceop_output(
 
 
 def EOP_plotter(eop_handler):
+    """
+    Plot the eop results as 4 bar plots in plt
+    """
     # Plot the eop results as 4 bar plots in plt
     # Get the data
     eop_original_acc_valid, eop_original_avg_odds_valid = np.absolute(

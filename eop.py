@@ -12,6 +12,12 @@ class EOP_Handler:
         unpriviliged_groups,
         seed,
     ):
+        """
+        Handler class for the aif360 EqOddsPostprocessing algorithm.
+        This class is used to store and manage the datasets and predictions that are
+        used in the EOP algorithm.
+        It also has methods for dataset metrics and performance metrics.
+        """
         self.validation_dataset = validation_dataset
         self.test_dataset = test_dataset
         self.validation_predictions = validation_predictions
