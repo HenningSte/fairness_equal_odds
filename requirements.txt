@@ -1,0 +1,7 @@
+aif360
+ipykernel
+tqdm
+jax[cpu]
+flax[all]
+tensorflow
+tensorflow_datasets
