@@ -18,11 +18,12 @@ How they work in detail is explained in the presentation pdf found in the course
    cd fairness_equal_odds
    ```
 
-3. Install dependencies:
+3. Install dependencies (we used Python version 3.11.9, to be sure use a version between 3.8 -3.11):
 
     ```bash
     pip install -r requirements.txt
     ```
+    
         
 4. Download the model checkpoints folder from [github.com/lucasld/neural_network_analysis](https://github.com/lucasld/neural_network_analysis/tree/main/).
 

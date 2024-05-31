@@ -5,3 +5,4 @@ jax[cpu]
 flax[all]
 tensorflow
 tensorflow_datasets
+notebook
